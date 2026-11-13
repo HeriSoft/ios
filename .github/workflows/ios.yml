@@ -1,0 +1,107 @@
+name: iOS build & test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, test & screenshots
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      BUNDLE_ID: com.herisoft.caloriescan
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen & generate project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Pick an iPhone simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            echo "No iPhone simulator found"; xcrun simctl list devices available; exit 1
+          fi
+          xcrun simctl list devices available | grep "$UDID"
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+
+      - name: Run unit tests
+        run: |
+          status=0
+          xcodebuild test \
+            -project CalorieScan.xcodeproj \
+            -scheme CalorieScan \
+            -destination "id=$SIM_UDID" \
+            -derivedDataPath build \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO > xcodebuild-test.log 2>&1 || status=$?
+          grep -E "error:|Test Case .*(passed|failed)|Executed|\*\* (TEST|BUILD)" xcodebuild-test.log || true
+          if [ "$status" -ne 0 ]; then tail -n 80 xcodebuild-test.log; fi
+          exit "$status"
+
+      - name: Take screenshots in the simulator
+        run: |
+          APP=build/Build/Products/Debug-iphonesimulator/CalorieScan.app
+          mkdir -p screenshots
+          xcrun simctl boot "$SIM_UDID" || true
+          xcrun simctl bootstatus "$SIM_UDID" -b
+          xcrun simctl status_bar "$SIM_UDID" override --time "9:41" --batteryLevel 100 --batteryState charged || true
+          xcrun simctl install "$SIM_UDID" "$APP"
+          for screen in scan detail label log; do
+            xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" || true
+            xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoScreen "$screen"
+            sleep 6
+            xcrun simctl io "$SIM_UDID" screenshot "screenshots/$screen.png"
+          done
+          ls -la screenshots
+
+      - name: Build simulator app for Appetize.io
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project CalorieScan.xcodeproj \
+            -scheme CalorieScan \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath build-release \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -n 20
+          cd build-release/Build/Products/Release-iphonesimulator
+          zip -qry "$GITHUB_WORKSPACE/CalorieScan-simulator.zip" CalorieScan.app
+          ls -la "$GITHUB_WORKSPACE/CalorieScan-simulator.zip"
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: CalorieScan-simulator-app
+          path: CalorieScan-simulator.zip
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            xcodebuild-test.log
+            TestResults.xcresult
+          if-no-files-found: ignore
