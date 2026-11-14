@@ -4,6 +4,7 @@ import SwiftUI
 enum AppTab: Hashable {
     case scan
     case food
+    case body
     case log
 }
 
@@ -20,6 +21,10 @@ struct ContentView: View {
             FoodTab()
                 .tabItem { Label("Món ăn", systemImage: "fork.knife") }
                 .tag(AppTab.food)
+
+            BodyTab()
+                .tabItem { Label("Cơ thể", systemImage: "figure.stand") }
+                .tag(AppTab.body)
 
             LogView()
                 .tabItem { Label("Nhật ký", systemImage: "list.bullet.rectangle") }

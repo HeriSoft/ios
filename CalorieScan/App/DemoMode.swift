@@ -4,7 +4,7 @@ import SwiftData
 /// Mở thẳng một màn hình với dữ liệu mẫu, ví dụ: `-demoScreen detail`.
 /// Dùng trên GitHub Actions để chụp màn hình app mà không cần camera.
 enum DemoScreen: String {
-    case scan, detail, label, food, log
+    case scan, detail, label, food, body, log
 }
 
 enum DemoMode {
@@ -16,6 +16,7 @@ enum DemoMode {
         switch current {
         case .log: return .log
         case .food: return .food
+        case .body: return .body
         default: return .scan
         }
     }

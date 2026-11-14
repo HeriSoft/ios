@@ -59,7 +59,7 @@ jobs:
           xcrun simctl bootstatus "$SIM_UDID" -b
           xcrun simctl status_bar "$SIM_UDID" override --time "9:41" --batteryLevel 100 --batteryState charged || true
           xcrun simctl install "$SIM_UDID" "$APP"
-          for screen in scan detail label food log; do
+          for screen in scan detail label food body log; do
             xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" || true
             xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID" -demoScreen "$screen"
             sleep 6
