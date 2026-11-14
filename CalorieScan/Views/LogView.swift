@@ -4,58 +4,70 @@ import SwiftUI
 struct LogView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \FoodEntry.date, order: .reverse) private var entries: [FoodEntry]
+    @Query(sort: \WorkoutEntry.date, order: .reverse) private var workouts: [WorkoutEntry]
     @AppStorage("dailyGoal") private var dailyGoal: Double = 2000
 
     private struct DayGroup: Identifiable {
         let day: Date
-        let items: [FoodEntry]
+        let foods: [FoodEntry]
+        let workouts: [WorkoutEntry]
         var id: Date { day }
-        var total: Double { items.reduce(0) { $0 + $1.kcal } }
+        var eaten: Double { foods.reduce(0) { $0 + $1.kcal } }
+        var burned: Double { workouts.reduce(0) { $0 + $1.kcal } }
     }
 
     private var groups: [DayGroup] {
         let calendar = Calendar.current
-        return Dictionary(grouping: entries) { calendar.startOfDay(for: $0.date) }
-            .map { DayGroup(day: $0.key, items: $0.value) }
+        let foodsByDay = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.date) }
+        let workoutsByDay = Dictionary(grouping: workouts) { calendar.startOfDay(for: $0.date) }
+        let days = Set(foodsByDay.keys).union(workoutsByDay.keys)
+        return days
+            .map { DayGroup(day: $0, foods: foodsByDay[$0] ?? [], workouts: workoutsByDay[$0] ?? []) }
             .sorted { $0.day > $1.day }
     }
 
-    private var todayTotal: Double {
-        entries.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.kcal }
+    private var today: DayGroup? {
+        groups.first { Calendar.current.isDateInToday($0.day) }
     }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    TodaySummaryView(total: todayTotal, goal: dailyGoal)
-                    Stepper(value: $dailyGoal, in: 1000...5000, step: 100) {
+                    TodaySummaryView(eaten: today?.eaten ?? 0, burned: today?.burned ?? 0, goal: dailyGoal)
+                    Stepper(value: $dailyGoal, in: 1000...5000, step: 50) {
                         Text("Mục tiêu: \(Int(dailyGoal)) kcal/ngày")
                     }
+                } footer: {
+                    Text("Còn lại = mục tiêu − ăn vào + đốt khi tập. Nếu đã chọn mức vận động cao ở tab Cơ thể, một phần calo tập đã nằm trong mục tiêu.")
                 }
 
-                if entries.isEmpty {
+                if entries.isEmpty && workouts.isEmpty {
                     ContentUnavailableView(
-                        "Chưa có món nào",
+                        "Chưa có gì trong nhật ký",
                         systemImage: "fork.knife",
-                        description: Text("Quét sản phẩm và bấm \"Thêm vào nhật ký\" để bắt đầu.")
+                        description: Text("Quét sản phẩm, chọn món ăn hoặc ghi buổi tập để bắt đầu.")
                     )
                 }
 
                 ForEach(groups) { group in
                     Section {
-                        ForEach(group.items) { entry in
-                            EntryRow(entry: entry)
-                        }
-                        .onDelete { offsets in
-                            for index in offsets { modelContext.delete(group.items[index]) }
-                            try? modelContext.save()
-                        }
+                        ForEach(group.foods) { EntryRow(entry: $0) }
+                            .onDelete { offsets in
+                                for index in offsets { modelContext.delete(group.foods[index]) }
+                                try? modelContext.save()
+                            }
+                        ForEach(group.workouts) { WorkoutRow(entry: $0) }
+                            .onDelete { offsets in
+                                for index in offsets { modelContext.delete(group.workouts[index]) }
+                                try? modelContext.save()
+                            }
                     } header: {
                         HStack {
                             Text(title(for: group.day))
                             Spacer()
-                            Text(group.total.kcalText)
+                            Text("+\(Int(group.eaten.rounded())) / −\(Int(group.burned.rounded())) kcal")
+                                .monospacedDigit()
                         }
                     }
                 }
@@ -77,6 +89,9 @@ private struct EntryRow: View {
 
     var body: some View {
         HStack {
+            Image(systemName: "fork.knife")
+                .frame(width: 28)
+                .foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.name).font(.body)
                 Text("\(entry.amount.shortText) \(entry.unit) · \(entry.date.formatted(date: .omitted, time: .shortened))")
@@ -84,18 +99,20 @@ private struct EntryRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(entry.kcal.kcalText)
+            Text("+\(entry.kcal.kcalText)")
                 .font(.body.monospacedDigit().weight(.semibold))
         }
     }
 }
 
 private struct TodaySummaryView: View {
-    let total: Double
+    let eaten: Double
+    let burned: Double
     let goal: Double
 
-    private var progress: Double { goal > 0 ? min(total / goal, 1) : 0 }
-    private var remaining: Double { goal - total }
+    private var budget: Double { goal + burned }
+    private var remaining: Double { budget - eaten }
+    private var progress: Double { budget > 0 ? min(eaten / budget, 1) : 0 }
 
     var body: some View {
         HStack(spacing: 20) {
@@ -106,18 +123,26 @@ private struct TodaySummaryView: View {
                     .stroke(remaining >= 0 ? Color.orange : Color.red,
                             style: StrokeStyle(lineWidth: 12, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                Text("\(Int((total / max(goal, 1) * 100).rounded()))%")
-                    .font(.headline.monospacedDigit())
+                VStack(spacing: 0) {
+                    Text("\(Int(abs(remaining).rounded()))")
+                        .font(.headline.monospacedDigit())
+                    Text(remaining >= 0 ? "còn lại" : "vượt")
+                        .font(.caption2)
+                        .foregroundStyle(remaining >= 0 ? Color.secondary : Color.red)
+                }
             }
-            .frame(width: 90, height: 90)
+            .frame(width: 96, height: 96)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("Hôm nay").font(.subheadline).foregroundStyle(.secondary)
-                Text(total.kcalText).font(.title.bold())
-                Text(remaining >= 0 ? "Còn \(remaining.kcalText)" : "Vượt \((-remaining).kcalText)")
-                    .font(.subheadline)
-                    .foregroundStyle(remaining >= 0 ? Color.secondary : Color.red)
+                Label("Ăn vào: \(eaten.kcalText)", systemImage: "fork.knife")
+                    .foregroundStyle(.orange)
+                Label("Đốt khi tập: \(burned.kcalText)", systemImage: "flame.fill")
+                    .foregroundStyle(.green)
+                Label("Mục tiêu: \(goal.kcalText)", systemImage: "target")
+                    .foregroundStyle(.secondary)
             }
+            .font(.subheadline.monospacedDigit())
         }
         .padding(.vertical, 8)
     }

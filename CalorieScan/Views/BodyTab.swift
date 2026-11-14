@@ -1,5 +1,9 @@
 import SwiftUI
 
+enum BodyRoute: Hashable {
+    case symptoms
+}
+
 /// Tính chỉ số cơ thể (BMI, BMR, TDEE…), calo mục tiêu và gợi ý thực phẩm.
 struct BodyTab: View {
     @AppStorage("body.sex") private var sex: Sex = .female
@@ -20,9 +24,23 @@ struct BodyTab: View {
         Binding(get: { waistCm > 0 ? waistCm : nil }, set: { waistCm = $0 ?? 0 })
     }
 
+    @State private var path: [BodyRoute] = DemoMode.current == .symptoms ? [.symptoms] : []
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
+                Section {
+                    NavigationLink(value: BodyRoute.symptoms) {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Kiểm tra triệu chứng")
+                                Text("Đánh giá mức độ cần đi khám và cách chăm sóc").font(.caption).foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "stethoscope").foregroundStyle(.red)
+                        }
+                    }
+                }
                 inputSection
                 if let report = HealthCalculator.report(for: profile) {
                     bodySection(report)
@@ -42,6 +60,11 @@ struct BodyTab: View {
                 }
             }
             .navigationTitle("Cơ thể")
+            .navigationDestination(for: BodyRoute.self) { route in
+                switch route {
+                case .symptoms: SymptomCheckerView()
+                }
+            }
         }
     }
 

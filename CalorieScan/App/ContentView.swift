@@ -4,8 +4,8 @@ import SwiftUI
 enum AppTab: Hashable {
     case scan
     case food
+    case exercise
     case body
-    case symptoms
     case log
 }
 
@@ -23,13 +23,13 @@ struct ContentView: View {
                 .tabItem { Label("Món ăn", systemImage: "fork.knife") }
                 .tag(AppTab.food)
 
+            ExerciseTab()
+                .tabItem { Label("Tập luyện", systemImage: "figure.run") }
+                .tag(AppTab.exercise)
+
             BodyTab()
                 .tabItem { Label("Cơ thể", systemImage: "figure.stand") }
                 .tag(AppTab.body)
-
-            SymptomTab()
-                .tabItem { Label("Triệu chứng", systemImage: "stethoscope") }
-                .tag(AppTab.symptoms)
 
             LogView()
                 .tabItem { Label("Nhật ký", systemImage: "list.bullet.rectangle") }

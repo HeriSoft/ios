@@ -1,28 +1,18 @@
 import SwiftUI
 
-enum SymptomRoute: Hashable {
-    case result
-    case condition(Condition, showMedication: Bool)
-}
-
 /// Nhập triệu chứng → đánh giá mức độ khẩn cấp và gợi ý chăm sóc.
-struct SymptomTab: View {
+/// Được mở từ tab Cơ thể (nằm trong NavigationStack của tab đó).
+struct SymptomCheckerView: View {
     @State private var input = DemoMode.initialSymptomInput
-    @State private var path: [SymptomRoute] = DemoMode.initialSymptomPath
+    @State private var showResult = DemoMode.current == .symptoms
 
     var body: some View {
-        NavigationStack(path: $path) {
-            SymptomInputView(input: $input) { path.append(.result) }
-                .navigationTitle("Triệu chứng")
-                .navigationDestination(for: SymptomRoute.self) { route in
-                    switch route {
-                    case .result:
-                        SymptomResultView(assessment: SymptomChecker.assess(input))
-                    case .condition(let condition, let showMedication):
-                        ConditionDetailView(condition: condition, showMedication: showMedication)
-                    }
-                }
-        }
+        SymptomInputView(input: $input) { showResult = true }
+            .navigationTitle("Kiểm tra triệu chứng")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $showResult) {
+                SymptomResultView(assessment: SymptomChecker.assess(input))
+            }
     }
 }
 
@@ -140,7 +130,9 @@ struct SymptomResultView: View {
             if !assessment.matches.isEmpty {
                 Section {
                     ForEach(assessment.matches) { match in
-                        NavigationLink(value: SymptomRoute.condition(match.condition, showMedication: assessment.showMedicationAdvice)) {
+                        NavigationLink {
+                            ConditionDetailView(condition: match.condition, showMedication: assessment.showMedicationAdvice)
+                        } label: {
                             VStack(alignment: .leading, spacing: 3) {
                                 HStack {
                                     Text(match.condition.name).font(.headline)

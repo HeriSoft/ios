@@ -4,7 +4,7 @@ import SwiftData
 /// Mở thẳng một màn hình với dữ liệu mẫu, ví dụ: `-demoScreen detail`.
 /// Dùng trên GitHub Actions để chụp màn hình app mà không cần camera.
 enum DemoScreen: String {
-    case scan, detail, label, food, body, symptoms, log
+    case scan, detail, label, food, exercise, plan, body, symptoms, log
 }
 
 enum DemoMode {
@@ -16,8 +16,8 @@ enum DemoMode {
         switch current {
         case .log: return .log
         case .food: return .food
-        case .body: return .body
-        case .symptoms: return .symptoms
+        case .exercise, .plan: return .exercise
+        case .body, .symptoms: return .body
         default: return .scan
         }
     }
@@ -30,9 +30,6 @@ enum DemoMode {
                                  duration: .oneToThreeDays, severity: .moderate)
     }
 
-    static var initialSymptomPath: [SymptomRoute] {
-        current == .symptoms ? [.result] : []
-    }
 
     static var initialScanPath: [ScanRoute] {
         switch current {
@@ -77,7 +74,7 @@ enum DemoData {
 
     @MainActor
     static func seedIfNeeded(_ context: ModelContext) {
-        guard DemoMode.current == .log else { return }
+        guard DemoMode.current == .log || DemoMode.current == .exercise else { return }
         let existing = (try? context.fetchCount(FetchDescriptor<FoodEntry>())) ?? 0
         guard existing == 0 else { return }
 
@@ -97,6 +94,12 @@ enum DemoData {
             FoodEntry(date: at(-1, 19, 30), name: "Nước ngọt có ga", amount: 330, unit: "g", kcal: 139),
         ]
         for sample in samples { context.insert(sample) }
+        let workouts: [WorkoutEntry] = [
+            WorkoutEntry(date: at(0, 6, 15), name: "Đi bộ nhanh", exerciseID: "walk-brisk", minutes: 30, kcal: 140),
+            WorkoutEntry(date: at(0, 18, 0), name: "Cầu lông", exerciseID: "badminton", minutes: 45, kcal: 268),
+            WorkoutEntry(date: at(-1, 17, 30), name: "Bài tập tại nhà (squat, chống đẩy…)", exerciseID: "bodyweight", minutes: 25, kcal: 103),
+        ]
+        for workout in workouts { context.insert(workout) }
         try? context.save()
     }
 }
