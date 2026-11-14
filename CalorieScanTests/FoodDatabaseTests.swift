@@ -16,7 +16,8 @@ final class FoodDatabaseTests: XCTestCase {
     }
 
     func testMatchSortsByConfidenceAndDeduplicates() {
-        let guesses = FoodDatabase.match(labels: [("banana", 0.9), ("fruit", 0.5), ("noodles", 0.3)])
+        // "fruit" là nhãn chung: tính nửa điểm (0.25) nên các món "ramen" (0.3) xếp trước.
+        let guesses = FoodDatabase.match(labels: [("banana", 0.9), ("fruit", 0.5), ("ramen", 0.3)])
         XCTAssertEqual(guesses.first?.food.id, "chuoi")
         XCTAssertEqual(guesses.first?.confidence, 0.9)
         XCTAssertEqual(guesses.filter { $0.food.id == "chuoi" }.count, 1)
@@ -25,8 +26,8 @@ final class FoodDatabaseTests: XCTestCase {
     }
 
     func testMatchUnderscoreIdentifiers() {
-        let guesses = FoodDatabase.match(labels: [("french_fries", 0.8)])
-        XCTAssertEqual(guesses.first?.food.id, "khoai-tay-chien")
+        let guesses = FoodDatabase.match(labels: [("fried_chicken", 0.8)])
+        XCTAssertEqual(guesses.first?.food.id, "ga-ran")
     }
 
     func testNoFoodLabels() {
@@ -49,14 +50,14 @@ final class FoodDatabaseTests: XCTestCase {
         XCTAssertEqual(pho.productInfo.source, .estimate)
     }
 
-    /// In ra (không làm test thất bại) các nhãn trong bảng mà bộ phân loại Vision không hỗ trợ,
-    /// cùng các nhãn đồ ăn Vision hỗ trợ — dùng để cải thiện bảng món ăn.
-    func testReportVisionLabelCoverage() {
+    /// Mọi nhãn trong bảng phải là nhãn mà bộ phân loại Vision thật sự hỗ trợ.
+    func testAllVisionLabelsAreSupported() throws {
         let supported = Set(FoodClassifier.supportedIdentifiers().map(FoodDatabase.normalizeLabel))
         print("VISION supported identifiers: \(supported.count)")
-        guard !supported.isEmpty else { return }
+        try XCTSkipIf(supported.isEmpty, "Vision không trả về danh sách nhãn trên máy này")
         let used = Set(FoodDatabase.all.flatMap(\.visionLabels))
-        print("VISION unsupported labels in table: \(used.subtracting(supported).sorted().joined(separator: ", "))")
-        print("VISION all identifiers: \(supported.sorted().joined(separator: ", "))")
+        let unsupported = used.subtracting(supported).sorted()
+        XCTAssertTrue(unsupported.isEmpty, "VISION unsupported labels in table: \(unsupported.joined(separator: ", "))")
+        XCTAssertTrue(FoodDatabase.genericLabels.isSubset(of: supported))
     }
 }
