@@ -79,8 +79,33 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tail -n 20
           cd build-release/Build/Products/Release-iphonesimulator
+          echo "Architectures:"; lipo -info CalorieScan.app/CalorieScan
+          /usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" CalorieScan.app/Info.plist
           zip -qry "$GITHUB_WORKSPACE/CalorieScan-simulator.zip" CalorieScan.app
           ls -la "$GITHUB_WORKSPACE/CalorieScan-simulator.zip"
+
+      - name: Check the Appetize build launches
+        run: |
+          xcrun simctl list runtimes
+          CHECK_DIR="$RUNNER_TEMP/release-check"
+          mkdir -p "$CHECK_DIR" && cd "$CHECK_DIR"
+          unzip -q "$GITHUB_WORKSPACE/CalorieScan-simulator.zip"
+          xcrun simctl terminate "$SIM_UDID" "$BUNDLE_ID" || true
+          xcrun simctl uninstall "$SIM_UDID" "$BUNDLE_ID" || true
+          xcrun simctl install "$SIM_UDID" CalorieScan.app
+          xcrun simctl launch "$SIM_UDID" "$BUNDLE_ID"
+          sleep 10
+          xcrun simctl io "$SIM_UDID" screenshot "$GITHUB_WORKSPACE/screenshots/release-launch.png"
+          mkdir -p "$GITHUB_WORKSPACE/crash-logs"
+          find ~/Library/Logs/DiagnosticReports -iname "*CalorieScan*" -exec cp {} "$GITHUB_WORKSPACE/crash-logs/" \; 2>/dev/null || true
+          if xcrun simctl spawn "$SIM_UDID" launchctl list | grep -q "$BUNDLE_ID"; then
+            echo "Release build is running after launch."
+          else
+            echo "::error::Release build is not running after launch (crashed?)"
+            ls -la "$GITHUB_WORKSPACE/crash-logs"
+            for f in "$GITHUB_WORKSPACE"/crash-logs/*; do [ -f "$f" ] && head -n 80 "$f"; done
+            exit 1
+          fi
 
       - name: Upload screenshots
         if: always()
@@ -104,4 +129,5 @@ jobs:
           path: |
             xcodebuild-test.log
             TestResults.xcresult
+            crash-logs/
           if-no-files-found: ignore
