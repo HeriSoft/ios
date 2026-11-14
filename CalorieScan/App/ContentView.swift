@@ -5,6 +5,7 @@ enum AppTab: Hashable {
     case scan
     case food
     case body
+    case symptoms
     case log
 }
 
@@ -25,6 +26,10 @@ struct ContentView: View {
             BodyTab()
                 .tabItem { Label("Cơ thể", systemImage: "figure.stand") }
                 .tag(AppTab.body)
+
+            SymptomTab()
+                .tabItem { Label("Triệu chứng", systemImage: "stethoscope") }
+                .tag(AppTab.symptoms)
 
             LogView()
                 .tabItem { Label("Nhật ký", systemImage: "list.bullet.rectangle") }

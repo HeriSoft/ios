@@ -4,7 +4,7 @@ import SwiftData
 /// Mở thẳng một màn hình với dữ liệu mẫu, ví dụ: `-demoScreen detail`.
 /// Dùng trên GitHub Actions để chụp màn hình app mà không cần camera.
 enum DemoScreen: String {
-    case scan, detail, label, food, body, log
+    case scan, detail, label, food, body, symptoms, log
 }
 
 enum DemoMode {
@@ -17,11 +17,22 @@ enum DemoMode {
         case .log: return .log
         case .food: return .food
         case .body: return .body
+        case .symptoms: return .symptoms
         default: return .scan
         }
     }
 
     static var initialFoodPath: [FoodItem] { [] }
+
+    static var initialSymptomInput: SymptomCheckInput {
+        guard current == .symptoms else { return SymptomCheckInput() }
+        return SymptomCheckInput(symptoms: [.fever, .headache, .muscleAche, .fatigue],
+                                 duration: .oneToThreeDays, severity: .moderate)
+    }
+
+    static var initialSymptomPath: [SymptomRoute] {
+        current == .symptoms ? [.result] : []
+    }
 
     static var initialScanPath: [ScanRoute] {
         switch current {
