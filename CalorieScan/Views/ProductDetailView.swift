@@ -17,12 +17,12 @@ struct ProductDetailView: View {
     @State private var manualKcal100: Double?
     @State private var showSaved = false
 
-    init(product: ProductInfo, onSaved: @escaping () -> Void) {
+    init(product: ProductInfo, preferServings: Bool = false, onSaved: @escaping () -> Void) {
         self.product = product
         self.onSaved = onSaved
-        let preferServings = product.kcalPer100g == nil && product.effectiveKcalPerServing != nil
-        _mode = State(initialValue: preferServings ? .servings : .grams)
-        _amount = State(initialValue: preferServings ? 1 : (product.servingGrams ?? 100))
+        let useServings = (preferServings || product.kcalPer100g == nil) && product.effectiveKcalPerServing != nil
+        _mode = State(initialValue: useServings ? .servings : .grams)
+        _amount = State(initialValue: useServings ? 1 : (product.servingGrams ?? 100))
     }
 
     private var kcalPer100: Double? { product.kcalPer100g ?? manualKcal100 }
@@ -110,8 +110,13 @@ struct ProductDetailView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(totalKcal == nil)
             } footer: {
-                if product.source == .openFoodFacts {
+                switch product.source {
+                case .openFoodFacts:
                     Text("Dữ liệu từ Open Food Facts (cộng đồng đóng góp). Giá trị có thể chưa chính xác tuyệt đối.")
+                case .estimate:
+                    Text("Giá trị ước tính trung bình. Lượng calo thực tế phụ thuộc cách chế biến và khẩu phần.")
+                case .label, .manual:
+                    EmptyView()
                 }
             }
         }

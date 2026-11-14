@@ -4,7 +4,7 @@ import SwiftData
 /// Mở thẳng một màn hình với dữ liệu mẫu, ví dụ: `-demoScreen detail`.
 /// Dùng trên GitHub Actions để chụp màn hình app mà không cần camera.
 enum DemoScreen: String {
-    case scan, detail, label, log
+    case scan, detail, label, food, log
 }
 
 enum DemoMode {
@@ -13,8 +13,14 @@ enum DemoMode {
         .flatMap(DemoScreen.init(rawValue:))
 
     static var initialTab: AppTab {
-        current == .log ? .log : .scan
+        switch current {
+        case .log: return .log
+        case .food: return .food
+        default: return .scan
+        }
     }
+
+    static var initialFoodPath: [FoodItem] { [] }
 
     static var initialScanPath: [ScanRoute] {
         switch current {
@@ -40,6 +46,13 @@ enum DemoData {
         fat100g: 21.4,
         source: .openFoodFacts
     )
+
+    static var foodGuesses: [FoodGuess] {
+        let picks: [(String, Float)] = [("pho-bo", 0.62), ("bun-bo-hue", 0.62), ("hu-tieu", 0.62), ("mi-goi", 0.41), ("canh-chua", 0.18)]
+        return picks.compactMap { id, confidence in
+            FoodDatabase.all.first { $0.id == id }.map { FoodGuess(food: $0, confidence: confidence) }
+        }
+    }
 
     static let labelLines = [
         "THÔNG TIN DINH DƯỠNG",

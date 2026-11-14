@@ -3,6 +3,7 @@ import SwiftUI
 
 enum AppTab: Hashable {
     case scan
+    case food
     case log
 }
 
@@ -15,6 +16,10 @@ struct ContentView: View {
             ScanTab()
                 .tabItem { Label("Quét", systemImage: "barcode.viewfinder") }
                 .tag(AppTab.scan)
+
+            FoodTab()
+                .tabItem { Label("Món ăn", systemImage: "fork.knife") }
+                .tag(AppTab.food)
 
             LogView()
                 .tabItem { Label("Nhật ký", systemImage: "list.bullet.rectangle") }

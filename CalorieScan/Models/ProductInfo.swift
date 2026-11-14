@@ -6,6 +6,8 @@ struct ProductInfo: Hashable, Identifiable {
         case openFoodFacts
         case label
         case manual
+        /// Giá trị ước tính từ bảng món ăn.
+        case estimate
     }
 
     var barcode: String? = nil
