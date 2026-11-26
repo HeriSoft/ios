@@ -1,6 +1,19 @@
 # Quét Calo (CalorieScan)
 
-Ứng dụng iOS (SwiftUI) quét mã vạch / mã QR / nhãn dinh dưỡng trên bao bì sản phẩm và tính lượng calo.
+Ứng dụng quét mã vạch / mã QR / nhãn dinh dưỡng trên bao bì sản phẩm và tính lượng calo, có hai bản:
+
+- **iOS** (Swift/SwiftUI) – thư mục `CalorieScan/`
+- **Android** (Kotlin/Jetpack Compose) – thư mục `android/`, cùng tính năng và dữ liệu với bản iOS
+
+## Cài bản Android (.apk)
+
+1. Mở tab **Actions** của repo → workflow **Android build & test** → lần chạy mới nhất.
+2. Ở mục **Artifacts**, tải `QuetCalo-android-apk` (file zip) và giải nén để lấy `QuetCalo-debug.apk`.
+3. Mở file `.apk` trên điện thoại Android, cho phép "Cài ứng dụng không rõ nguồn gốc" khi được hỏi.
+
+Bản Android build bằng khoá debug (dùng để thử nghiệm, không phải bản phát hành trên Google Play). Artifact `android-screenshots` có ảnh chụp các màn hình chạy trên emulator.
+
+Build trên máy có Android SDK: `cd android && gradle :app:assembleDebug` (chỉ chạy test phần logic: `gradle :core:test`, không cần Android SDK).
 
 ## Tính năng
 
