@@ -339,7 +339,7 @@ fun ProductDetail(vm: AppViewModel, nav: NavHostController, product: ProductInfo
                 } else {
                     NumberField("Năng lượng / 100 g", manualKcal100, { manualKcal100 = it }, suffix = "kcal")
                 }
-                kcalServing?.let { LabeledRow("Mỗi khẩu phần ${product.servingSizeText?.let { "($it)" } ?: ""}", it.kcalText) }
+                kcalServing?.let { LabeledRow("Mỗi khẩu phần" + (product.servingSizeText?.let { " · $it" } ?: ""), it.kcalText) }
                 product.protein100g?.let { LabeledRow("Chất đạm", "${it.shortText} g") }
                 product.carbs100g?.let { LabeledRow("Carbohydrate", "${it.shortText} g") }
                 product.sugars100g?.let { LabeledRow("   trong đó đường", "${it.shortText} g") }

@@ -32,6 +32,16 @@ final class SymptomCheckerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(a.level, .seeDoctor)
     }
 
+    func testDengueAnywhereInMatchesRaisesLevel() {
+        // Cúm đứng đầu, sốt xuất huyết đứng sau: vẫn phải khuyên đi khám.
+        let a = SymptomChecker.assess(SymptomCheckInput(symptoms: [.fever, .headache, .muscleAche, .fatigue],
+                                                        duration: .oneToThreeDays, severity: .moderate))
+        XCTAssertNotEqual(a.matches.first?.condition.id, "dengue")
+        XCTAssertTrue(a.matches.contains { $0.condition.id == "dengue" })
+        XCTAssertEqual(a.level, .seeDoctor)
+        XCTAssertTrue(a.reasons.contains { $0.contains("Sốt xuất huyết") })
+    }
+
     func testLongFeverIsUrgent() {
         let a = SymptomChecker.assess(SymptomCheckInput(symptoms: [.fever], duration: .fourToSevenDays))
         XCTAssertEqual(a.level, .urgent)

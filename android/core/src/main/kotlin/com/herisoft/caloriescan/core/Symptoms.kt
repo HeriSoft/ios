@@ -295,9 +295,12 @@ object SymptomChecker {
         }
 
         val matches = match(input.symptoms)
-        val top = matches.firstOrNull()
-        if (top != null && top.condition.minimumLevel > level) {
-            raise(top.condition.minimumLevel, "\"${top.condition.name}\" thường cần bác sĩ khám để xác định và điều trị.")
+        // Xét mọi nguyên nhân được liệt kê, không chỉ nguyên nhân đứng đầu
+        // (ví dụ sốt xuất huyết đứng thứ hai vẫn cần đi khám để loại trừ).
+        for (m in matches) {
+            if (m.condition.minimumLevel > level) {
+                raise(m.condition.minimumLevel, "Có thể là \"${m.condition.name}\": cần bác sĩ khám để xác định và điều trị.")
+            }
         }
         if (reasons.isEmpty()) reasons += "Chưa thấy dấu hiệu cần đi khám gấp dựa trên thông tin bạn nhập."
 

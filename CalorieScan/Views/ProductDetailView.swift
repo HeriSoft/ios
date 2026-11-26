@@ -65,7 +65,7 @@ struct ProductDetailView: View {
                     }
                 }
                 if let kcalPerServing {
-                    LabeledContent("Mỗi khẩu phần \(product.servingSizeText.map { "(\($0))" } ?? "")",
+                    LabeledContent("Mỗi khẩu phần\(product.servingSizeText.map { " · \($0)" } ?? "")",
                                    value: kcalPerServing.kcalText)
                 }
                 macroRow("Chất đạm", product.protein100g)

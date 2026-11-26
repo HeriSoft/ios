@@ -106,6 +106,15 @@ class SymptomCheckerTests {
         assertTrue(a.level >= CareLevel.seeDoctor)
     }
 
+    @Test fun dengueAnywhereInMatchesRaisesLevel() {
+        // Cúm đứng đầu, sốt xuất huyết đứng sau: vẫn phải khuyên đi khám.
+        val a = assess(setOf(Symptom.fever, Symptom.headache, Symptom.muscleAche, Symptom.fatigue), severity = SymptomSeverity.moderate)
+        assertNotEquals("dengue", a.matches.first().condition.id)
+        assertTrue(a.matches.any { it.condition.id == "dengue" })
+        assertEquals(CareLevel.seeDoctor, a.level)
+        assertTrue(a.reasons.any { it.contains("Sốt xuất huyết") })
+    }
+
     @Test fun longFeverAndVulnerableGroups() {
         assertEquals(CareLevel.urgent, assess(setOf(Symptom.fever), duration = SymptomDuration.fourToSevenDays).level)
         val child = assess(setOf(Symptom.diarrhea), group = PatientGroup.childUnder5)
