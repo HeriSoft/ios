@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Biểu tượng app: nền cam, khung quét và ngọn lửa (calo). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#F57C00" android:pathData="M54,4a50,50 0 1,0 0.01,0z" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="5"
+        android:pathData="M28,40V30h10 M70,30h10v10 M80,68v10H70 M38,78H28V68" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M54,32c0,8 -12,14 -12,26a12,12 0 0,0 24,0c0,-6 -3,-10 -5,-13c0,5 -3,8 -5,8c3,-8 -2,-15 -2,-21z" />
+</vector>

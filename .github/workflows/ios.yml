@@ -2,7 +2,15 @@ name: iOS build & test
 
 on:
   push:
+    paths-ignore:
+      - "android/**"
+      - ".github/workflows/android.yml"
+      - ".github/scripts/android-*"
   pull_request:
+    paths-ignore:
+      - "android/**"
+      - ".github/workflows/android.yml"
+      - ".github/scripts/android-*"
   workflow_dispatch:
 
 concurrency:
