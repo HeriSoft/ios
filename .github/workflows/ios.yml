@@ -46,6 +46,7 @@ jobs:
           echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
 
       - name: Run unit tests
+        timeout-minutes: 20
         run: |
           status=0
           xcodebuild test \
@@ -60,6 +61,7 @@ jobs:
           exit "$status"
 
       - name: Take screenshots in the simulator
+        timeout-minutes: 12
         run: |
           APP=build/Build/Products/Debug-iphonesimulator/CalorieScan.app
           mkdir -p screenshots
@@ -76,6 +78,7 @@ jobs:
           ls -la screenshots
 
       - name: Build simulator app for Appetize.io
+        timeout-minutes: 15
         run: |
           set -o pipefail
           xcodebuild build \
@@ -93,6 +96,7 @@ jobs:
           ls -la "$GITHUB_WORKSPACE/CalorieScan-simulator.zip"
 
       - name: Check the Appetize build launches
+        timeout-minutes: 6
         run: |
           xcrun simctl list runtimes
           CHECK_DIR="$RUNNER_TEMP/release-check"
