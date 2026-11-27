@@ -1,6 +1,7 @@
 """Chạy tiến trình dài bằng QProcess (không block GUI), stream output, dừng cả cây tiến trình."""
 from __future__ import annotations
 
+import sys
 import codecs
 import uuid
 from pathlib import Path
@@ -60,6 +61,9 @@ class ProcessRunner(QObject):
                 "INSERT INTO jobs(id, project_id, kind, status, detail, created_at, started_at) VALUES (?,?,?,?,?,?,?)",
                 (self.job_id, project_id, kind, "running", shown, utcnow_iso(), utcnow_iso()),
             )
+        if sys.platform != "win32" and hasattr(proc, "setUnixProcessParameters"):
+            # Session riêng để "Dừng cả cây" (killpg) không diệt luôn App Builder.
+            proc.setUnixProcessParameters(QProcess.UnixProcessFlag.CreateNewSession)
         proc.start(real[0], real[1:])
         self.started.emit(self.job_id)
         return self.job_id

@@ -129,6 +129,9 @@ def run(
             real, cwd=str(cwd) if cwd else None, env=env if env is not None else minimal_env(),
             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             shell=False, creationflags=flags,
+            # Ngoài Windows: tiến trình con có process group riêng để kill_tree (os.killpg)
+            # chỉ diệt cây con, không diệt chính App Builder.
+            start_new_session=sys.platform != "win32",
         )
     except FileNotFoundError:
         return RunResult(argv, None, error=f"Không tìm thấy chương trình: {argv[0]}")
@@ -229,6 +232,12 @@ def kill_tree(pid: int, job=None) -> None:
                        creationflags=subprocess.CREATE_NO_WINDOW)
     else:
         try:
-            os.killpg(os.getpgid(pid), 9)
+            pgid = os.getpgid(pid)
+            if pgid == os.getpgrp():
+                # Tiến trình chung process group với App Builder: chỉ diệt chính nó,
+                # không bao giờ killpg nhóm của mình.
+                os.kill(pid, 9)
+            else:
+                os.killpg(pgid, 9)
         except Exception:
             pass
