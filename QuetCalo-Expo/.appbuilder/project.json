@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "name": "Quét Calo",
+  "slug": "quet-calo",
+  "description": "Quét mã vạch/QR và nhãn dinh dưỡng trên bao bì, ước tính calo món ăn, ghi buổi tập, tính BMI/BMR/TDEE và kiểm tra triệu chứng. Bản React Native/Expo của app Quét Calo (iOS/Android native).",
+  "language": "vi",
+  "platforms": [
+    "android",
+    "ios"
+  ],
+  "android_package": "com.herisoft.quetcalo",
+  "ios_bundle_id": "com.herisoft.quetcalo",
+  "categories": [
+    "health"
+  ],
+  "template": "blank",
+  "features": [
+    "Quét mã vạch/QR, tra cứu Open Food Facts",
+    "Đọc nhãn dinh dưỡng (OCR, bản build native)",
+    "Nhận diện món ăn từ ảnh (bản build native) + bảng 68 món",
+    "Tính calo theo gram/khẩu phần",
+    "Tập luyện: 30 môn MET, lịch tập, bài tại nhà",
+    "Cơ thể: BMI châu Á, BMR/TDEE, gợi ý thực phẩm",
+    "Kiểm tra triệu chứng (tham khảo, không chẩn đoán)",
+    "Nhật ký calo ăn vào/đốt/còn lại"
+  ],
+  "storage": "local",
+  "backend": "none",
+  "capabilities": {
+    "login": false,
+    "offline": true,
+    "notifications": false,
+    "camera": true,
+    "location": false
+  },
+  "ai": {
+    "provider": "",
+    "model": "",
+    "mode": "economy",
+    "budget_usd_project": null,
+    "budget_usd_session": null
+  },
+  "main_prompt": "App đếm calo tiếng Việt: quét bao bì hoặc chụp món ăn để biết calo, ghi nhật ký ăn uống và tập luyện, tính chỉ số cơ thể, kiểm tra triệu chứng an toàn (luôn khuyên đi khám khi có dấu hiệu nguy hiểm).",
+  "references": [],
+  "screens": [
+    {
+      "route": "/(tabs)/index",
+      "title": "Quét",
+      "description": ""
+    },
+    {
+      "route": "/(tabs)/food",
+      "title": "Món ăn",
+      "description": ""
+    },
+    {
+      "route": "/(tabs)/exercise",
+      "title": "Tập luyện",
+      "description": ""
+    },
+    {
+      "route": "/(tabs)/body",
+      "title": "Cơ thể",
+      "description": ""
+    },
+    {
+      "route": "/(tabs)/log",
+      "title": "Nhật ký",
+      "description": ""
+    },
+    {
+      "route": "/product",
+      "title": "Chi tiết sản phẩm",
+      "description": ""
+    },
+    {
+      "route": "/lookup/[code]",
+      "title": "Tra cứu mã vạch",
+      "description": ""
+    },
+    {
+      "route": "/label",
+      "title": "Quét nhãn dinh dưỡng",
+      "description": ""
+    },
+    {
+      "route": "/manual",
+      "title": "Nhập thủ công",
+      "description": ""
+    },
+    {
+      "route": "/plan",
+      "title": "Lịch tập gợi ý",
+      "description": ""
+    },
+    {
+      "route": "/home-workout",
+      "title": "Bài tập tại nhà",
+      "description": ""
+    },
+    {
+      "route": "/move/[id]",
+      "title": "Động tác",
+      "description": ""
+    },
+    {
+      "route": "/symptoms",
+      "title": "Kiểm tra triệu chứng",
+      "description": ""
+    },
+    {
+      "route": "/symptom-result",
+      "title": "Đánh giá",
+      "description": ""
+    },
+    {
+      "route": "/condition/[id]",
+      "title": "Nguyên nhân",
+      "description": ""
+    },
+    {
+      "route": "/qr-text",
+      "title": "Mã QR",
+      "description": "Hiển thị nội dung mã QR không phải mã vạch sản phẩm"
+    },
+    {
+      "route": "/settings",
+      "title": "Cài đặt",
+      "description": "Giao diện sáng/tối"
+    }
+  ],
+  "navigation": "tabs",
+  "data_model": [],
+  "acceptance_tests": [
+    "Nhập mã 3017624010701 → hiện Nutella và calo/100 g (cần mạng)",
+    "Tìm 'pho' trong Món ăn → Phở bò 450 kcal/tô",
+    "Ghi 30 phút đi bộ nhanh (62 kg) → ≈140 kcal trong Nhật ký",
+    "Nữ 28t 158cm 62kg vận động nhẹ, giảm cân → BMI 24,8 Thừa cân, mục tiêu 1300 kcal",
+    "Sốt + đau đầu + đau cơ + mệt → 'Nên đi khám trong vài ngày tới' (có sốt xuất huyết)",
+    "Dữ liệu nhật ký còn sau khi tắt mở lại app"
+  ],
+  "theme": {
+    "style": "modern",
+    "primary": "#EA580C",
+    "accent": "#16A34A",
+    "background_light": "#F8FAFC",
+    "background_dark": "#0B1120",
+    "radius": 14,
+    "spacing": 16,
+    "font_family": "System"
+  },
+  "non_goals": [],
+  "locked_files": [],
+  "approved_requests": [],
+  "expo_sdk": "58",
+  "created_at": "2026-11-27T11:58:53+00:00"
+}
