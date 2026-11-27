@@ -119,7 +119,7 @@ sửa `ui/{assistant_panel,main_window}.py`, `resources/i18n/{vi,en}.json` (+85 
 | M2 · UI: chat streaming, Dừng, lỗi 429, chặn ngân sách, xác nhận giá chưa biết, lịch sử bật/tắt, hộp thoại Kết nối/Chi phí | **PASS** | `tests/ui/test_ai_m2.py` (provider TEST) |
 | M2 · Ảnh chụp UI (dark, offscreen): Assistant chat, Kết nối AI, Chi phí AI | **PASS** | kiểm tra bằng mắt trong phiên cloud |
 | M2 · Gọi API thật OpenAI / DeepSeek / Gemini / Claude | **BLOCKED** | chưa có key; chạy `APPBUILDER_LIVE_<PROVIDER>_KEY=… pytest -m live` |
-| M2 · Chạy trên Windows thật (keyring WinVault, Qt) | xem workflow `App Builder tests` | CI windows-latest |
+| M2 · `pytest -q` trên Windows thật (Python 3.11.9, PySide6 6.12, keyring WinVault) | **PASS** 120 passed, 5 skipped (4 live, 1 slow) | GitHub Actions `App Builder tests` run #2, windows-latest, 2026-11-27 |
 
 ## Known issues / hạn chế thực tế
 
