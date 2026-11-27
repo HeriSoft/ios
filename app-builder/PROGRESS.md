@@ -13,8 +13,8 @@ Bản sao cũ `HeriSoft/app-builder-ai` (private) và thư mục `D:\Developer\A
 |---|---|---|
 | M0 | Doctor, cấu trúc repo, Python env, README, decision log | ✅ Hoàn thành (2026-11-27) |
 | M1 | Desktop UI, dashboard, wizard, workspace, template Todo + Giáo dục, local data | ✅ Hoàn thành (2026-11-27) |
-| M2 | 4 API adapter, model picker, streaming, test connection, secure keys, usage budget | ⏳ Tiếp theo |
-| M3 | Agent plan/diff/apply, editor, checkpoint/undo, bounded repair | TODO |
+| M2 | 4 API adapter, model picker, streaming, test connection, secure keys, usage budget | ✅ Hoàn thành (2026-11-27) — gọi API thật: BLOCKED (chưa có key) |
+| M3 | Agent plan/diff/apply, editor, checkpoint/undo, bounded repair | ⏳ Tiếp theo |
 | M4 | Expo web live preview, device frames, review/typecheck, terminal logs, QR/device | TODO |
 | M5 | GitHub private/public wizard, secret scan, source ZIP | TODO |
 | M6 | Android local APK/AAB, build center, signing wizard, adb install | TODO (máy hiện BLOCKED: thiếu JDK/Android SDK/adb) |
@@ -64,6 +64,39 @@ Chức năng thật:
 - Chưa triển khai và **đã gắn nhãn rõ + vô hiệu hóa**: AI chat/plan (M2–M3), Diff (M3), Preview live (M4), Review/Problems (M4),
   Git/GitHub (M5), Build/Export (M5–M7), AI Usage/Budget (M2), backend Supabase/Firebase/REST (M8).
 
+## M2 — Provider AI, streaming, kết nối, ngân sách
+
+Làm trong phiên Claude Code cloud (Linux, Qt offscreen); trước khi làm tiếp trên máy Windows: `git pull`.
+
+File mới: `providers/{base,_errors,factory,openai_provider,deepseek_provider,gemini_provider,anthropic_provider,fake_provider}.py`,
+`agent/budget.py`, `services/ai_connections.py`, `ui/{ai_worker,connections_dialog,usage_dialog}.py`;
+sửa `ui/{assistant_panel,main_window}.py`, `resources/i18n/{vi,en}.json` (+85 khóa), `pyproject.toml`.
+
+- **Giao diện chung** `AIProvider`: `list_models()` + `stream(AIRequest, CancelToken)` phát `TextDelta…` rồi `Done(usage, stop_reason,
+  model, fallback_used)`; lỗi chuẩn hóa `ProviderError(kind)` (auth / permission / not_found / rate_limit / invalid_request /
+  server / network / timeout) — chi tiết lỗi đã che secret.
+- **Adapter dùng SDK chính thức** (D15): OpenAI — Responses API (`store=False`); DeepSeek — SDK `openai` + Chat Completions
+  (`stream_options.include_usage`); Gemini — `google-genai` `generate_content_stream` (token suy nghĩ tính vào đầu ra);
+  Claude — `anthropic` `messages.stream`, model mặc định `claude-opus-5-5`, bật dự phòng phía server khi model từ chối
+  (`fallbacks="default"`, D17). Usage chuẩn hóa: input gồm cả phần cache, cached tách riêng, output gồm token suy luận.
+- **Kết nối AI** (toolbar “Kết nối AI” hoặc ⚙ trong Assistant): key ẩn/hiện, lưu bằng keyring (`ai.<provider>.api_key`),
+  không bao giờ ghi vào settings/SQLite/log; base URL chỉ `https://` tới host công khai (chặn http, user:pass@, query, localhost,
+  IP nội bộ); Kiểm tra kết nối (chạy nền) = tải danh sách model → cache vào `model_cache`; Ngắt kết nối xóa key + cache.
+- **Assistant › Chat**: chọn provider đã kết nối + model (danh sách đã cache hoặc gõ id), streaming trên QThread, nút **Dừng**
+  hủy giữa chừng, cuộc trò chuyện mới, system prompt từ spec dự án; mỗi lượt hiện token vào/cache/ra + chi phí; báo khi bị cắt
+  token, model từ chối, dùng model dự phòng. Lịch sử chỉ lưu khi bật trong Cài đặt (D23). Lập kế hoạch/sửa file vẫn khóa (M3).
+- **Ngân sách** (`agent/budget.py`): bảng giá có nguồn + ngày; giá Claude lấy từ tài liệu Claude API (2026-11-03); giá
+  OpenAI/Gemini/DeepSeek không ghi sẵn — người dùng nhập trong “Chi phí AI › Bảng giá” (D16), model chưa có giá phải xác nhận
+  trước khi gửi. Trước request: ước lượng chi phí tối đa (đầu vào ước lượng + `max_output_tokens` theo chế độ, D18) và giữ chỗ;
+  chặn khi vượt ngân sách phiên/dự án, cảnh báo ≥ 80 %. Sau request: ghi `usage_records` (không lưu nội dung chat), lượt bị
+  dừng/lỗi cũng ghi. Toolbar hiện “Phiên: $đã dùng / $giới hạn”.
+- **Provider TEST** (`fake`, nhãn rõ “TEST”): không gọi mạng, chỉ hiện khi `APPBUILDER_FAKE_PROVIDER=1` (test/demo, D22).
+- **Sửa lỗi M0 phát hiện khi chạy test trên Linux**: `process_manager.run`/`ProcessRunner` khởi chạy tiến trình con chung process
+  group với app, nên khi timeout/Dừng thì `os.killpg` diệt luôn App Builder (và pytest). Nay tiến trình con có session riêng và
+  `kill_tree` không bao giờ killpg nhóm của chính app. (Windows dùng Job Object/taskkill — không bị ảnh hưởng.)
+- **CI**: workflow `App Builder tests` chạy pytest trên `windows-latest` (Qt offscreen) cho thay đổi trong `app-builder/`;
+  workflow iOS (macOS) bỏ qua `app-builder/**` nên đẩy code App Builder không còn tốn ~15 phút máy macOS.
+
 ## Bằng chứng kiểm thử
 
 | Test | Kết quả | Bằng chứng |
@@ -80,6 +113,13 @@ Chức năng thật:
 | Doctor CLI trên máy thật | **PASS** | 16 mục; BLOCKED: Android build, Emulator, Cài APK, Thiết bị USB |
 | Ảnh chụp UI dark/light (offscreen) | **PASS** | dashboard, wizard, workspace — kiểm tra bằng mắt |
 | Chạy app thật trên Android/emulator, CRUD sau restart trên thiết bị | **BLOCKED** | thiếu Android SDK/adb; cần M4/M6 |
+| M2 · `pytest -q` toàn bộ (Linux, Python 3.13, PySide6 6.12, Qt offscreen) | **PASS** 117 passed, 8 skipped (4 chỉ chạy trên Windows, 4 live) | phiên cloud 2026-11-27, ổn định 3 lần chạy |
+| M2 · Adapter 4 provider với client giả: streaming, usage (cache/suy luận), hủy, dự phòng Claude, lọc model, lỗi→kind, che key trong lỗi | **PASS** | `tests/unit/test_providers.py` |
+| M2 · Base URL (https, host công khai), giá, ngân sách 80 %/chặn, giữ chỗ, sổ chi phí, key chỉ trong secret store | **PASS** | `tests/unit/test_budget_connections.py` |
+| M2 · UI: chat streaming, Dừng, lỗi 429, chặn ngân sách, xác nhận giá chưa biết, lịch sử bật/tắt, hộp thoại Kết nối/Chi phí | **PASS** | `tests/ui/test_ai_m2.py` (provider TEST) |
+| M2 · Ảnh chụp UI (dark, offscreen): Assistant chat, Kết nối AI, Chi phí AI | **PASS** | kiểm tra bằng mắt trong phiên cloud |
+| M2 · Gọi API thật OpenAI / DeepSeek / Gemini / Claude | **BLOCKED** | chưa có key; chạy `APPBUILDER_LIVE_<PROVIDER>_KEY=… pytest -m live` |
+| M2 · Chạy trên Windows thật (keyring WinVault, Qt) | xem workflow `App Builder tests` | CI windows-latest |
 
 ## Known issues / hạn chế thực tế
 
@@ -90,6 +130,10 @@ Chức năng thật:
 5. Đổi ngôn ngữ IDE cần khởi động lại.
 6. Highlighter regex đơn giản (MVP), chưa có Monaco.
 7. Thư mục Files tree dùng QFileSystemModel; file ẩn `.appbuilder` vẫn hiện (có chủ đích).
+8. Ước lượng token trước request là thô (~3 ký tự/token, thiên về cao) — chỉ dùng để giữ chỗ ngân sách; chi phí thật lấy từ usage.
+9. Giá Claude Haiku 5.5 dùng mức cho prompt ≤ 100K token; ghi cache (cache write) tính như đầu vào thường (thực tế đắt hơn ~25 %).
+10. Lượt dùng model dự phòng của Claude, hoặc bị Dừng trước khi có usage, ghi chi phí “≈ ước tính” (`cost_known = 0`).
+11. Lịch sử hội thoại M2 chỉ để xem lại; chưa nạp lại hội thoại cũ vào ngữ cảnh chat (M3).
 
 ## Cách mở app
 
@@ -98,12 +142,9 @@ Chức năng thật:
 .\scripts\run.ps1
 ```
 
-## Việc tiếp theo (M2)
+## Việc tiếp theo (M3)
 
-- `providers/base.py` (Protocol AIProvider, AIRequest/AIEvent), adapter OpenAI (Responses API), DeepSeek (OpenAI-compatible),
-  Gemini (`google-genai`), Anthropic (Messages API) — kiểm tra docs/flags hiện hành trước khi viết.
-- `ui/connections_dialog.py`: card provider, key mask/show (keyring), base URL + validate HTTPS/host, Test Connection,
-  Refresh Models, Disconnect.
-- `agent/budget.py`: bảng giá có ngày cập nhật, ước lượng trước request, ledger `usage_records`, cảnh báo 80%, reservation,
-  giá unknown → hỏi xác nhận.
-- Streaming + cancel trong Assistant panel; fake provider có nhãn TEST cho test offline; test tích hợp thật opt-in → BLOCKED nếu không có key.
+- Agent plan → diff → apply trên `ProviderLayer` của M2: model trả `ChangePlan`/`FileChange` (schemas đã có), xem diff,
+  áp dụng nguyên tử có checkpoint/undo, giới hạn số vòng sửa lỗi (bounded repair).
+- Mở khóa các nút Lập kế hoạch / Tạo / Chỉnh sửa / Sửa lỗi / Áp dụng / Từ chối / Hoàn tác trong Assistant.
+- Nạp lại hội thoại đã lưu vào ngữ cảnh; chọn phạm vi (app / màn hình / file / component).

@@ -16,3 +16,13 @@
 | D12 | 2026-11-27 | Quyền nhạy cảm (camera, vị trí, thông báo, login) chỉ ghi vào spec, `app.json` permissions rỗng | Mặc định không bật quyền nhạy cảm; agent M3 đề xuất patch để người dùng duyệt |
 | D13 | 2026-11-27 | i18n IDE bằng JSON `resources/i18n/{vi,en}.json`, đổi ngôn ngữ cần khởi động lại | Đơn giản, đủ cho MVP |
 | D14 | 2026-11-27 | Doctor cảnh báo Node lẻ/ngoài `engines` của Expo, không chặn | Máy hiện dùng Node 25.9 (non-LTS); `npm install` + `tsc` + `expo export --platform web` vẫn chạy được nhưng có cảnh báo EBADENGINE |
+| D15 | 2026-11-27 | Provider dùng **SDK chính thức** (`openai` ≥ 3.60, `anthropic` ≥ 2.14, `google-genai` ≥ 3.6), chuyển từ extra `ai` vào dependencies chính; DeepSeek dùng SDK `openai` với base URL riêng | SDK xử lý retry/stream/lỗi có kiểu; M2 là chức năng lõi nên `setup.ps1` (`.[dev]`) phải cài đủ. Adapter nhận `client` để test bằng client giả |
+| D16 | 2026-11-27 | Chỉ ghi sẵn giá Claude (có nguồn + ngày); giá OpenAI/Gemini/DeepSeek do người dùng nhập; model chưa có giá phải xác nhận trước khi gửi | Không hardcode giá từ trí nhớ; giá các hãng đổi thường xuyên |
+| D17 | 2026-11-27 | Claude: bật dự phòng phía server khi model từ chối (`server-side-fallback-2026-07-01`, `fallbacks="default"`) cho Opus 5/5.5, Sonnet 5.5, Fable 5.1/5.2 | Khuyến nghị của tài liệu Claude API; lượt chạy model dự phòng tính giá model đó → ghi “≈ ước tính” |
+| D18 | 2026-11-27 | `max_output_tokens` theo chế độ trong spec: Tiết kiệm 4 000 · Cân bằng 16 000 · Nâng cao 64 000 | Tránh cắt câu trả lời nhưng vẫn giữ mức giữ chỗ ngân sách hợp lý |
+| D19 | 2026-11-27 | Base URL tùy chỉnh chỉ `https://` tới host công khai (chặn http, user:pass@, query/fragment, localhost, IP nội bộ) | Không gửi API key qua kênh không mã hóa hoặc tới máy trong mạng nội bộ do nhập nhầm/bị lừa |
+| D20 | 2026-11-27 | Streaming chạy trên QThread riêng, hủy bằng `CancelToken`; ghi DB và cập nhật UI trên luồng UI | UI không bị treo; tránh race khi ghi `usage_records` |
+| D21 | 2026-11-27 | Key lưu trong keyring với ref `ai.<provider>.api_key`; base URL trong bảng `settings`; danh sách model trong `model_cache` | Đúng nguyên tắc M0: DB chỉ giữ reference, không giữ secret |
+| D22 | 2026-11-27 | Provider TEST (`fake`) chỉ hiện khi `APPBUILDER_FAKE_PROVIDER=1` | Test/demo offline không gọi mạng; người dùng thường không thấy |
+| D23 | 2026-11-27 | Nội dung chat chỉ lưu vào `conversations/messages` khi bật “Lưu lịch sử” trong Cài đặt; `usage_records` luôn ghi nhưng không chứa nội dung | Riêng tư theo mặc định, vẫn theo dõi được chi phí |
+| D24 | 2026-11-27 | Ngoài Windows, tiến trình con chạy trong session riêng; `kill_tree` không killpg nhóm của chính app | Sửa lỗi diệt nhầm App Builder khi timeout/Dừng trên Linux/macOS |
