@@ -15,6 +15,7 @@ export default function TabsLayout() {
         headerTintColor: theme.colors.text,
         headerTitleStyle: { fontWeight: "700" },
         tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
         sceneStyle: { backgroundColor: theme.colors.background },
       }}

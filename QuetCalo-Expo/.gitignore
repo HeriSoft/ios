@@ -40,3 +40,6 @@ yarn-error.*
 .DS_Store
 Thumbs.db
 .appbuilder/cache/
+
+# Expo tự tạo/xóa file này khi chạy
+expo-env.d.ts
