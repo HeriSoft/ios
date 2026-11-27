@@ -3,8 +3,9 @@
 Tài liệu duy trì ngữ cảnh giữa các phiên làm việc. Đặc tả gốc: `app_builder.md` (bản người dùng cung cấp).
 Quy ước: chỉ ghi **PASS** khi đã thực sự chạy; **BLOCKED** khi máy thiếu công cụ/tài khoản; **TODO** khi chưa làm.
 
-**Repository:** https://github.com/HeriSoft/app-builder-ai (PRIVATE, nhánh `main`). Commit đầu `1967214` = M0 + M1.
-Lưu ý: KHÔNG dùng repo `HeriSoft/ios` (public, chứa dự án CalorieScan khác).
+**Repository chính:** https://github.com/HeriSoft/ios — thư mục `app-builder/` (repo PUBLIC, chung với dự án CalorieScan).
+Làm việc tại bản clone `D:\Developer\iospp-builder`. Đẩy CI: workflow iOS của repo chạy với mọi push ngoài `android/`.
+Bản sao cũ `HeriSoft/app-builder-ai` (private) và thư mục `D:\Developer\App Builder` chỉ còn là lưu trữ, không cập nhật tiếp.
 
 ## Tổng quan milestone
 
