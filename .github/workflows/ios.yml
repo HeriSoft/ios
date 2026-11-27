@@ -6,8 +6,6 @@ on:
       - "android/**"
       - ".github/workflows/android.yml"
       - ".github/scripts/android-*"
-      - "app-builder/**"
-      - ".github/workflows/app-builder.yml"
       - "QuetCalo-Expo/**"
       - ".github/workflows/quetcalo-expo.yml"
   pull_request:
@@ -15,8 +13,6 @@ on:
       - "android/**"
       - ".github/workflows/android.yml"
       - ".github/scripts/android-*"
-      - "app-builder/**"
-      - ".github/workflows/app-builder.yml"
       - "QuetCalo-Expo/**"
       - ".github/workflows/quetcalo-expo.yml"
   workflow_dispatch:
