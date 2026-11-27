@@ -5,10 +5,12 @@ on:
     paths:
       - "QuetCalo-Expo/**"
       - ".github/workflows/quetcalo-expo.yml"
+      - ".github/scripts/expo-android-*"
   pull_request:
     paths:
       - "QuetCalo-Expo/**"
       - ".github/workflows/quetcalo-expo.yml"
+      - ".github/scripts/expo-android-*"
   workflow_dispatch:
 
 concurrency:
@@ -36,3 +38,73 @@ jobs:
       - run: npx expo export --platform web
         env:
           CI: "1"
+
+  apk:
+    name: Build Android APK
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: QuetCalo-Expo/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Tạo project Android (expo prebuild)
+        run: npx expo prebuild --platform android --no-install
+        env:
+          CI: "1"
+      - name: Build release APK (ký bằng khóa debug, cài thử được)
+        working-directory: QuetCalo-Expo/android
+        run: |
+          ./gradlew --no-daemon assembleRelease -PreactNativeArchitectures=arm64-v8a,x86_64
+          mkdir -p ../../dist
+          cp app/build/outputs/apk/release/app-release.apk ../../dist/QuetCalo-Expo.apk
+          ls -la ../../dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuetCalo-Expo-apk
+          path: dist/QuetCalo-Expo.apk
+
+  smoke:
+    name: Emulator smoke test
+    needs: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: QuetCalo-Expo-apk
+          path: dist
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Chạy app trong emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated
+          script: bash .github/scripts/expo-android-smoke.sh dist/QuetCalo-Expo.apk
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuetCalo-Expo-screenshots
+          path: expo-android-screenshots/
+          if-no-files-found: ignore
