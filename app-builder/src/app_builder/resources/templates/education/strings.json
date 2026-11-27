@@ -1,0 +1,42 @@
+{
+  "vi": {
+    "tabLessons": "Bài học",
+    "tabGallery": "Thư viện",
+    "tabSchedule": "Lịch học",
+    "tabActivities": "Hoạt động",
+    "progress": "Đã học {done}/{total} bài",
+    "learned": "Đã học",
+    "markLearned": "Đánh dấu đã học",
+    "unmarkLearned": "Bỏ đánh dấu",
+    "steps": "Các bước",
+    "lessonNotFound": "Không tìm thấy bài học.",
+    "todayActivities": "Hoạt động hôm nay",
+    "activitiesDone": "Hoàn thành {done}/{total}",
+    "close": "Đóng",
+    "resetProgress": "Xóa toàn bộ tiến độ",
+    "confirmReset": "Xóa tiến độ học và hoạt động?",
+    "confirmResetMessage": "Dữ liệu chỉ lưu trên thiết bị này và sẽ bị xóa vĩnh viễn.",
+    "privacyNote": "Dữ liệu học tập chỉ lưu trên thiết bị, không gửi lên máy chủ.",
+    "loadFailed": "Không đọc được tiến độ đã lưu."
+  },
+  "en": {
+    "tabLessons": "Lessons",
+    "tabGallery": "Gallery",
+    "tabSchedule": "Schedule",
+    "tabActivities": "Activities",
+    "progress": "Learned {done}/{total} lessons",
+    "learned": "Learned",
+    "markLearned": "Mark as learned",
+    "unmarkLearned": "Unmark",
+    "steps": "Steps",
+    "lessonNotFound": "Lesson not found.",
+    "todayActivities": "Today's activities",
+    "activitiesDone": "Completed {done}/{total}",
+    "close": "Close",
+    "resetProgress": "Reset all progress",
+    "confirmReset": "Reset lesson and activity progress?",
+    "confirmResetMessage": "Data is stored only on this device and will be permanently deleted.",
+    "privacyNote": "Learning data stays on this device and is never sent to a server.",
+    "loadFailed": "Could not read saved progress."
+  }
+}

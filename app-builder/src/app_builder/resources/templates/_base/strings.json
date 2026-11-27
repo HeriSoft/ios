@@ -1,0 +1,38 @@
+{
+  "vi": {
+    "loading": "Đang tải…",
+    "errorTitle": "Đã có lỗi",
+    "retry": "Thử lại",
+    "cancel": "Hủy",
+    "ok": "Đồng ý",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "settings": "Cài đặt",
+    "appearance": "Giao diện",
+    "themeSystem": "Theo hệ thống",
+    "themeLight": "Sáng",
+    "themeDark": "Tối",
+    "about": "Thông tin",
+    "version": "Phiên bản {version}",
+    "notFound": "Không tìm thấy trang",
+    "goHome": "Về trang chủ"
+  },
+  "en": {
+    "loading": "Loading…",
+    "errorTitle": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "save": "Save",
+    "delete": "Delete",
+    "settings": "Settings",
+    "appearance": "Appearance",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "about": "About",
+    "version": "Version {version}",
+    "notFound": "Page not found",
+    "goHome": "Go home"
+  }
+}
