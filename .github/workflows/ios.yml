@@ -6,11 +6,15 @@ on:
       - "android/**"
       - ".github/workflows/android.yml"
       - ".github/scripts/android-*"
+      - "app-builder/**"
+      - ".github/workflows/app-builder.yml"
   pull_request:
     paths-ignore:
       - "android/**"
       - ".github/workflows/android.yml"
       - ".github/scripts/android-*"
+      - "app-builder/**"
+      - ".github/workflows/app-builder.yml"
   workflow_dispatch:
 
 concurrency:

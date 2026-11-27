@@ -12,13 +12,17 @@ from PySide6.QtWidgets import (
 )
 
 from app_builder import APP_NAME, __version__
+from app_builder.agent.budget import BudgetManager
 from app_builder.core.config import AppSettings, save_settings
 from app_builder.core.database import Database
 from app_builder.core.i18n import language, tr
 from app_builder.core.permissions import TRUST_WARNING_EN, TRUST_WARNING_VI
+from app_builder.core.secret_store import SecretStore
+from app_builder.services.ai_connections import ConnectionManager
 from app_builder.services.project_service import ProjectRecord, ProjectService
 from app_builder.ui.assistant_panel import AssistantPanel
 from app_builder.ui.bottom_panel import BottomPanel
+from app_builder.ui.connections_dialog import ConnectionsDialog
 from app_builder.ui.dashboard import Dashboard
 from app_builder.ui.doctor_dialog import DoctorDialog
 from app_builder.ui.editor_panel import CodeHighlighter, EditorTabs, lang_for
@@ -28,17 +32,22 @@ from app_builder.ui.project_panel import ProjectPanel
 from app_builder.ui.project_wizard import ProjectWizard
 from app_builder.ui.settings_dialog import SettingsDialog
 from app_builder.ui.theme import apply_theme
+from app_builder.ui.usage_dialog import UsageDialog, usd
 from app_builder.ui.widgets import MilestoneNotice, badge, label, set_badge_kind
 
 log = logging.getLogger(__name__)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, settings: AppSettings, db: Database, projects: ProjectService) -> None:
+    def __init__(self, settings: AppSettings, db: Database, projects: ProjectService,
+                 secrets: SecretStore | None = None) -> None:
         super().__init__()
         self.settings = settings
         self.db = db
         self.projects = projects
+        self.secrets = secrets or SecretStore()
+        self.connections = ConnectionManager(db, self.secrets)
+        self.budget = BudgetManager(db)
         self.current: ProjectRecord | None = None
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.setMinimumSize(1280, 720)
@@ -72,6 +81,7 @@ class MainWindow(QMainWindow):
         else:
             self.resize(1440, 860)
         self.show_dashboard()
+        self._refresh_ai_status()
 
     # ---- UI construction -------------------------------------------------------
     def _build_toolbars(self) -> None:
@@ -93,16 +103,14 @@ class MainWindow(QMainWindow):
         self.platform_combo.setToolTip(tr("tb.platform_tip"))
         top.addWidget(self.platform_combo)
         top.addWidget(QLabel("  " + tr("tb.ai") + " "))
-        self.ai_combo = QComboBox()
-        self.ai_combo.addItem(tr("assist.no_provider"))
-        self.ai_combo.setEnabled(False)
-        self.ai_combo.setToolTip(tr("common.planned", milestone="M2"))
-        top.addWidget(self.ai_combo)
+        self.ai_badge = badge("")
+        self.ai_badge.setToolTip(tr("conn.title"))
+        top.addWidget(self.ai_badge)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         top.addWidget(spacer)
-        self.budget_badge = badge(tr("tb.budget_na"), "warn")
-        self.budget_badge.setToolTip(tr("common.planned", milestone="M2"))
+        self.budget_badge = badge("")
+        self.budget_badge.setToolTip(tr("usage.title"))
         top.addWidget(self.budget_badge)
 
         self.addToolBarBreak()
@@ -147,6 +155,8 @@ class MainWindow(QMainWindow):
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         acts.addWidget(spacer)
+        act("🔌 " + tr("tb.ai_connect"), self.show_connections)
+        act("$ " + tr("tb.ai_usage"), self.show_usage)
         act("◐ " + tr("tb.theme"), self._toggle_theme)
         act("🩺 Doctor", self.show_doctor)
         act("⚙ " + tr("tb.settings"), self.show_settings)
@@ -180,7 +190,9 @@ class MainWindow(QMainWindow):
         rl.addStretch(1)
         self.center.addTab(review, tr("ws.review"))
 
-        self.assistant = AssistantPanel()
+        self.assistant = AssistantPanel(self.connections, self.budget, self.db, lambda: self.settings)
+        self.assistant.open_connections.connect(self.show_connections)
+        self.assistant.usage_changed.connect(self._refresh_ai_status)
         self.bottom = BottomPanel(self.db)
 
         h = QSplitter(Qt.Orientation.Horizontal)
@@ -238,7 +250,8 @@ class MainWindow(QMainWindow):
         self.current = self.projects.get(pid)
         root = Path(rec.path)
         self.project_panel.set_project(root)
-        self.assistant.set_project(root)
+        self.assistant.set_project(root, pid)
+        self._refresh_ai_status()
         self.preview.set_project(root)
         self.bottom.refresh_tasks(pid)
         spec = ProjectService.load_spec(root)
@@ -335,6 +348,30 @@ class MainWindow(QMainWindow):
             self.project_panel.refresh()
             self.preview.set_project(Path(self.current.path))
 
+    # ---- AI (M2) -----------------------------------------------------------------
+    def _refresh_ai_status(self) -> None:
+        n = len(self.connections.connected())
+        set_badge_kind(self.ai_badge, tr("tb.ai_status", n=n) if n else tr("assist.no_provider"), "ok" if n else "warn")
+        limit = self.budget.session_limit()
+        spent = self.budget.spent_session()
+        text = tr("tb.budget", spent=usd(spent), limit=usd(limit) if limit else tr("usage.no_limit"))
+        kind = "err" if limit and spent >= limit else "warn" if limit and spent >= 0.8 * limit else "ok"
+        set_badge_kind(self.budget_badge, text, kind)
+
+    def show_connections(self) -> None:
+        dlg = ConnectionsDialog(self.connections, self)
+        dlg.changed.connect(self._on_ai_changed)
+        dlg.exec()
+        self._on_ai_changed()
+
+    def _on_ai_changed(self, _provider_id: str | None = None) -> None:
+        self.assistant.reload_providers()
+        self._refresh_ai_status()
+
+    def show_usage(self) -> None:
+        UsageDialog(self.budget, self.current.id if self.current else None, self.assistant.project_limit(), self).exec()
+        self._refresh_ai_status()
+
     # ---- dialogs ----------------------------------------------------------------
     def show_doctor(self) -> None:
         DoctorDialog(self.settings.tool_paths, self.settings.workspace_dir, self).exec()
@@ -345,6 +382,7 @@ class MainWindow(QMainWindow):
             lang_changed = dlg.settings.language != self.settings.language
             self.settings = dlg.settings
             save_settings(self.settings)
+            self.assistant._load_history_list()
             apply_theme(QApplication.instance(), self.settings.theme)
             if lang_changed:
                 QMessageBox.information(self, tr("settings.title"), tr("settings.restart"))
@@ -367,6 +405,9 @@ class MainWindow(QMainWindow):
         if not self.editors.close_all():
             e.ignore()
             return
+        if self.assistant.stream:
+            self.assistant.stop()
+            self.assistant.stream.wait(5000)
         self.settings.window_geometry = bytes(self.saveGeometry().toBase64()).decode()
         save_settings(self.settings)
         e.accept()
