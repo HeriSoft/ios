@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Quét Calo",
+    "slug": "quet-calo",
+    "version": "1.0.0",
+    "scheme": "quetcalo",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.herisoft.quetcalo",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.herisoft.quetcalo",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Quét Calo cần camera để quét mã vạch, mã QR, nhãn dinh dưỡng và chụp món ăn.",
+        "NSPhotoLibraryUsageDescription": "Quét Calo cần ảnh để đọc nhãn dinh dưỡng và nhận diện món ăn."
+      }
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Quét Calo cần camera để quét mã vạch, mã QR, nhãn dinh dưỡng và chụp món ăn.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Quét Calo cần ảnh để đọc nhãn dinh dưỡng và nhận diện món ăn.",
+          "cameraPermission": "Quét Calo cần camera để chụp nhãn dinh dưỡng và món ăn."
+        }
+      ]
+    ]
+  }
+}

@@ -4,7 +4,7 @@ Tài liệu duy trì ngữ cảnh giữa các phiên làm việc. Đặc tả g�
 Quy ước: chỉ ghi **PASS** khi đã thực sự chạy; **BLOCKED** khi máy thiếu công cụ/tài khoản; **TODO** khi chưa làm.
 
 **Repository chính:** https://github.com/HeriSoft/ios — thư mục `app-builder/` (repo PUBLIC, chung với dự án CalorieScan).
-Làm việc tại bản clone `D:\Developer\iospp-builder`. Đẩy CI: workflow iOS của repo chạy với mọi push ngoài `android/`.
+Làm việc tại bản clone `D:\Developer\ios\app-builder`. Đẩy CI: workflow iOS của repo chạy với mọi push ngoài `android/`.
 Bản sao cũ `HeriSoft/app-builder-ai` (private) và thư mục `D:\Developer\App Builder` chỉ còn là lưu trữ, không cập nhật tiếp.
 
 ## Tổng quan milestone

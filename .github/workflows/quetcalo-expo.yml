@@ -1,0 +1,38 @@
+name: Quét Calo (Expo) tests
+
+on:
+  push:
+    paths:
+      - "QuetCalo-Expo/**"
+      - ".github/workflows/quetcalo-expo.yml"
+  pull_request:
+    paths:
+      - "QuetCalo-Expo/**"
+      - ".github/workflows/quetcalo-expo.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: quetcalo-expo-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: QuetCalo-Expo
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: QuetCalo-Expo/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npx expo export --platform web
+        env:
+          CI: "1"
