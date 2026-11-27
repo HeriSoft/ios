@@ -6,15 +6,17 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QPlainTextEdit, QPushButton, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
+from app_builder.agent.budget import BudgetManager
 from app_builder.core.database import Database
 from app_builder.core.i18n import tr
+from app_builder.ui.usage_panel import UsagePanel
 from app_builder.ui.widgets import MilestoneNotice
 
 MAX_CONSOLE_BLOCKS = 5000
 
 
 class BottomPanel(QTabWidget):
-    def __init__(self, db: Database) -> None:
+    def __init__(self, db: Database, budget: BudgetManager | None = None) -> None:
         super().__init__()
         self.db = db
         self.setDocumentMode(True)
@@ -40,14 +42,15 @@ class BottomPanel(QTabWidget):
         self.addTab(term, tr("bottom.terminal"))
         for key, ms, detail in (("bottom.problems", "M4", "bottom.problems_notice"),
                                 ("bottom.build", "M6", "bottom.build_notice"),
-                                ("bottom.git", "M5", "bottom.git_notice"),
-                                ("bottom.usage", "M2", "bottom.usage_notice")):
+                                ("bottom.git", "M5", "bottom.git_notice")):
             w = QWidget()
             v = QVBoxLayout(w)
             v.setContentsMargins(12, 10, 12, 10)
             v.addWidget(MilestoneNotice(tr(key), ms, tr(detail)))
             v.addStretch(1)
             self.addTab(w, tr(key))
+        self.usage = UsagePanel(budget or BudgetManager(db))
+        self.addTab(self.usage, tr("bottom.usage"))
         self.tasks = QTableWidget(0, 5)
         self.tasks.setHorizontalHeaderLabels([tr("bottom.t_kind"), tr("bottom.t_status"), tr("bottom.t_cmd"),
                                               tr("bottom.t_start"), tr("bottom.t_end")])

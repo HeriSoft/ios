@@ -42,7 +42,8 @@ class MilestoneNotice(QFrame):
         row = QHBoxLayout()
         row.addWidget(label(title, "H3"))
         row.addStretch(1)
-        row.addWidget(badge(tr("common.planned", milestone=milestone), "warn"))
+        if milestone:
+            row.addWidget(badge(tr("common.planned", milestone=milestone), "warn"))
         lay.addLayout(row)
         if detail:
             lay.addWidget(label(detail, "Muted", wrap=True))

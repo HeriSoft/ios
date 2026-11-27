@@ -109,6 +109,14 @@ MIGRATIONS: list[str] = [
     CREATE INDEX idx_usage_created ON usage_records(created_at);
     CREATE INDEX idx_audit_project ON audit_events(project_id);
     """,
+    # v2 (M2): ledger chi tiết hơn cho ngân sách AI
+    """
+    ALTER TABLE usage_records ADD COLUMN session_id TEXT;
+    ALTER TABLE usage_records ADD COLUMN estimated_cost_usd REAL;
+    ALTER TABLE usage_records ADD COLUMN served_model TEXT;
+    ALTER TABLE usage_records ADD COLUMN note TEXT NOT NULL DEFAULT '';
+    CREATE INDEX idx_usage_project ON usage_records(project_id);
+    """,
 ]
 
 
